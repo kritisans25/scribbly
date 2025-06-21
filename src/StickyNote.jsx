@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import EmojiPicker from 'emoji-picker-react';
 import { PiPushPinFill } from 'react-icons/pi';
@@ -10,9 +10,19 @@ export default function StickyNote({ note, notes, setNotes }) {
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [color, setColor] = useState(note.color || '#EBD6FB');
   const [showColorPalette, setShowColorPalette] = useState(false);
+  const [isDraggable, setIsDraggable] = useState(true);
   const reminderRef = useRef();
 
   const customColors = ['#EBD6FB', '#FEEBF6', '#FFF2E0', '#ADEED9', '#7F8CAA'];
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDraggable(window.innerWidth >= 768); // disable drag for smaller screens
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const updateNote = (updatedNote) => {
     const updatedNotes = notes.map(n => n.id === note.id ? updatedNote : n);
@@ -47,19 +57,16 @@ export default function StickyNote({ note, notes, setNotes }) {
     setNotes(updated);
   };
 
-
   const handleReminderSet = (e) => {
-  e.preventDefault();
-  const reminderValue = reminderRef.current?.value; // ✅ Safe access
-  if (!reminderValue) return; // Prevent error if empty
-
-  updateNote({ ...note, reminder: reminderValue });
-  setShowReminderModal(false);
-};
-
+    e.preventDefault();
+    const reminderValue = reminderRef.current?.value;
+    if (!reminderValue) return;
+    updateNote({ ...note, reminder: reminderValue });
+    setShowReminderModal(false);
+  };
 
   return (
-    <Draggable>
+    <Draggable disabled={!isDraggable}>
       <div
         className="relative w-64 min-h-64 p-4 rounded-xl shadow-lg m-4"
         style={{ backgroundColor: color }}
@@ -117,12 +124,12 @@ export default function StickyNote({ note, notes, setNotes }) {
         {showReminderModal && (
           <div className="absolute z-50 top-16 left-0 right-0 bg-white p-4 rounded shadow-lg">
             <p className="text-sm font-semibold mb-2">Set Reminder Time:</p>
-    <input
-  ref={reminderRef}
-  type="datetime-local"
-  className="mb-2 w-full"
-  required
-/>
+            <input
+              ref={reminderRef}
+              type="datetime-local"
+              className="mb-2 w-full"
+              required
+            />
 
             <button
               onClick={handleReminderSet}
@@ -144,4 +151,4 @@ export default function StickyNote({ note, notes, setNotes }) {
       </div>
     </Draggable>
   );
-} 
+}
