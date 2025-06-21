@@ -8,7 +8,7 @@ export default function App() {
   const [showLockedOnly, setShowLockedOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load notes from localStorage on mount
+  // Load from localStorage
   useEffect(() => {
     const savedNotes = localStorage.getItem('scribbly-notes');
     if (savedNotes) {
@@ -16,30 +16,32 @@ export default function App() {
     }
   }, []);
 
-  // Save notes to localStorage when they change
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('scribbly-notes', JSON.stringify(notes));
   }, [notes]);
 
-  // Ask for notification permission
+  // Ask notification permission
   useEffect(() => {
     if (Notification.permission !== 'granted') {
       Notification.requestPermission();
     }
   }, []);
 
-  // Check reminders every minute
+  // Reminders
   useEffect(() => {
     const interval = setInterval(() => {
       notes.forEach((note) => {
         if (note.reminderTime && new Date(note.reminderTime) <= new Date()) {
           if (Notification.permission === 'granted') {
             new Notification('Reminder from Scribbly', {
-              body: note.text || 'You have a note!'
+              body: note.text || 'You have a note!',
             });
           }
           setNotes((prev) =>
-            prev.map((n) => n.id === note.id ? { ...n, reminderTime: null } : n)
+            prev.map((n) =>
+              n.id === note.id ? { ...n, reminderTime: null } : n
+            )
           );
         }
       });
@@ -47,7 +49,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [notes]);
 
-  // Add a new note
+  // Add Note
   const handleAddNote = () => {
     const newNote = {
       id: Date.now(),
@@ -56,22 +58,22 @@ export default function App() {
       pinned: false,
       color: '#EBD6FB',
       emoji: '',
-      reminderTime: null
+      reminderTime: null,
     };
-    setNotes((prevNotes) => [newNote, ...prevNotes]);
+    setNotes((prev) => [newNote, ...prev]);
   };
 
-  // Toggle between showing locked and unlocked notes
+  // Toggle Lock View
   const handleToggleLocked = () => {
     setShowLockedOnly((prev) => !prev);
   };
 
-  // Search functionality
+  // Search
   const handleSearch = (query) => {
     setSearchQuery(query.toLowerCase());
   };
 
-  // Filter visible notes
+  // Filter Notes
   const visibleNotes = notes
     .filter((note) => {
       const matchesSearch = note.text.toLowerCase().includes(searchQuery);
@@ -81,31 +83,35 @@ export default function App() {
 
   return (
     <div
-      className="w-full min-h-screen bg-cover bg-center bg-no-repeat"
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat px-2 sm:px-4"
       style={{ backgroundImage: "url('/bg.png')" }}
     >
-      {/* Title Section */}
-      <div className="w-full flex justify-center pt-6">
+      {/* Title */}
+      <div className="flex justify-center pt-6">
         <div className="relative flex flex-col items-center">
           <img src="/kitty.png" alt="Kitten Logo" className="w-14 h-14 absolute -top-8" />
-          <div className="w-[500px] h-[80px] bg-scribblyYellow border-4 border-scribblyBrown rounded-[30px] flex items-center justify-center shadow-lg">
-            <h1 className="text-5xl font-scribbly text-scribblyBrown tracking-wider">SCRIBBLY</h1>
+          <div className="w-full max-w-[90vw] sm:max-w-[400px] h-[70px] bg-scribblyYellow border-4 border-scribblyBrown rounded-[30px] flex items-center justify-center shadow-lg px-4">
+            <h1 className="text-3xl sm:text-5xl font-scribbly text-scribblyBrown tracking-wider">SCRIBBLY</h1>
           </div>
         </div>
       </div>
 
-      {/* Buttons */}
-      <TopButtons
-        onAddNote={handleAddNote}
-        onToggleLocked={handleToggleLocked}
-        onSearch={handleSearch}
-      />
+      {/* Top Buttons */}
+      <div className="mt-6 flex justify-center">
+        <TopButtons
+          onAddNote={handleAddNote}
+          onToggleLocked={handleToggleLocked}
+          onSearch={handleSearch}
+        />
+      </div>
 
-      {/* Reminders */}
-      <ReminderBox notes={notes} />
+      {/* Reminder Box */}
+      <div className="mt-8 px-2">
+        <ReminderBox notes={notes} />
+      </div>
 
-      {/* Notes Display */}
-      <div className="flex flex-wrap justify-center gap-4 mt-6 px-4">
+      {/* Sticky Notes */}
+      <div className="flex flex-wrap justify-center gap-4 mt-6 px-2 sm:px-4">
         {visibleNotes.map((note) => (
           <StickyNote
             key={note.id}
@@ -118,5 +124,3 @@ export default function App() {
     </div>
   );
 }
-
-
